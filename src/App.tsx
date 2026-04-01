@@ -190,6 +190,30 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isAdminSession, setIsAdminSession] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'true') {
+      setIsAdminSession(true);
+    } else {
+      setIsAdminSession(false);
+      setIsEditMode(false);
+    }
+  }, [window.location.search]);
+
+  const toggleEditMode = () => {
+    if (!isEditMode) {
+      const password = window.prompt("Enter Owner Password to customize:");
+      if (password === "admin123") { // Simple default password
+        setIsEditMode(true);
+      } else if (password !== null) {
+        alert("Incorrect password.");
+      }
+    } else {
+      setIsEditMode(false);
+    }
+  };
   
   // --- EDITABLE CONFIG STATE ---
   const [studioConfig, setStudioConfig] = useState(() => {
@@ -365,51 +389,53 @@ export default function App() {
   return (
     <div className="min-h-screen selection:bg-accent selection:text-dark">
       
-      {/* EDIT MODE TOGGLE */}
-      <div className="fixed bottom-10 left-10 z-[120] flex flex-col gap-4">
-        <button 
-          onClick={() => setIsEditMode(!isEditMode)}
-          className={`p-4 rounded-full shadow-2xl transition-all flex items-center gap-2 group ${isEditMode ? 'bg-red-500 text-white' : 'bg-accent text-dark'}`}
-        >
-          <Pencil className={`w-5 h-5 ${isEditMode ? 'animate-pulse' : ''}`} />
-          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap font-bold uppercase tracking-widest text-xs">
-            {isEditMode ? 'Exit Customization' : 'Customize Studio'}
-          </span>
-        </button>
-
-        {isEditMode && (
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col gap-2"
+      {/* EDIT MODE TOGGLE - Hidden from regular users */}
+      {isAdminSession && (
+        <div className="fixed bottom-10 left-10 z-[120] flex flex-col gap-4">
+          <button 
+            onClick={toggleEditMode}
+            className={`p-4 rounded-full shadow-2xl transition-all flex items-center gap-2 group ${isEditMode ? 'bg-red-500 text-white' : 'bg-accent text-dark'}`}
           >
-            <button 
-              onClick={() => {
-                if (window.confirm("Are you sure you want to reset all customizations to default?")) {
-                  localStorage.clear();
-                  window.location.reload();
-                }
-              }}
-              className="bg-white/10 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/20 transition-all flex items-center gap-2 group"
-              title="Reset to Defaults"
+            <Pencil className={`w-5 h-5 ${isEditMode ? 'animate-pulse' : ''}`} />
+            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap font-bold uppercase tracking-widest text-xs">
+              {isEditMode ? 'Exit Customization' : 'Customize Studio'}
+            </span>
+          </button>
+
+          {isEditMode && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col gap-2"
             >
-              <Trash2 className="w-4 h-4" />
-              <span className="text-[10px] uppercase font-bold tracking-widest">Reset</span>
-            </button>
-            <button 
-              onClick={() => {
-                setShowToast(true);
-                setTimeout(() => setShowToast(false), 3000);
-              }}
-              className="bg-green-600 text-white p-3 rounded-full hover:bg-green-700 transition-all flex items-center gap-2 group shadow-lg"
-              title="Publish Changes"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span className="text-[10px] uppercase font-bold tracking-widest">Publish</span>
-            </button>
-          </motion.div>
-        )}
-      </div>
+              <button 
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to reset all customizations to default?")) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                className="bg-white/10 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/20 transition-all flex items-center gap-2 group"
+                title="Reset to Defaults"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-[10px] uppercase font-bold tracking-widest">Reset</span>
+              </button>
+              <button 
+                onClick={() => {
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
+                }}
+                className="bg-green-600 text-white p-3 rounded-full hover:bg-green-700 transition-all flex items-center gap-2 group shadow-lg"
+                title="Publish Changes"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-[10px] uppercase font-bold tracking-widest">Publish</span>
+              </button>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* NAVBAR */}
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-dark/95 backdrop-blur-md py-4 shadow-xl' : 'bg-transparent py-6'}`}>
